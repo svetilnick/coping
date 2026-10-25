@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Слова из слова</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0a14;--ink:#FFCCEA;--mute:rgba(255,204,234,.58);--dim:rgba(255,204,234,.28);
+  --acc:#F9539D;--acc2:#ff7ab5;--ok:#9ff0c4;--err:#ff9ab0;
+  --glass:rgba(255,255,255,.07);--glass2:rgba(255,255,255,.12);--edge:rgba(255,255,255,.16);
+  --st:var(--tg-safe-area-inset-top,0px);--ct:var(--tg-content-safe-area-inset-top,0px);--sb:var(--tg-safe-area-inset-bottom,0px);--sl:var(--tg-safe-area-inset-left,0px);--sr:var(--tg-safe-area-inset-right,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;border:none;cursor:pointer;color:inherit;background:none;padding:0}
+.U{font-family:'Unbounded',sans-serif}
+/* космос */
+.space{position:fixed;inset:0;z-index:0;overflow:hidden;background:
+  radial-gradient(120% 90% at 85% 10%,rgba(249,83,157,.22),transparent 55%),
+  radial-gradient(90% 80% at 10% 95%,rgba(98,70,255,.28),transparent 60%),
+  radial-gradient(70% 60% at 50% 50%,rgba(40,30,90,.5),transparent 70%),
+  linear-gradient(160deg,#0d0b1c,#0a0912 60%,#120a1a)}
+.space::before,.space::after{content:"";position:absolute;inset:-50%;background-image:
+  radial-gradient(1px 1px at 20px 30px,rgba(255,255,255,.7),transparent 60%),
+  radial-gradient(1px 1px at 120px 80px,rgba(255,220,240,.55),transparent 60%),
+  radial-gradient(1.5px 1.5px at 200px 160px,rgba(255,255,255,.6),transparent 60%),
+  radial-gradient(1px 1px at 60px 200px,rgba(200,200,255,.5),transparent 60%),
+  radial-gradient(1px 1px at 260px 40px,rgba(255,255,255,.4),transparent 60%);
+  background-size:300px 240px;animation:drift 160s linear infinite;opacity:.8}
+.space::after{background-size:420px 360px;animation-duration:260s;opacity:.45}
+.space .neb{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(60px);opacity:.35;background:radial-gradient(circle,rgba(249,83,157,.5),transparent 65%);top:-20vmax;right:-15vmax;animation:float 40s ease-in-out infinite alternate}
+.space .neb.b{background:radial-gradient(circle,rgba(110,90,255,.55),transparent 65%);top:auto;bottom:-25vmax;left:-20vmax;right:auto;animation-duration:55s}
+@keyframes drift{to{transform:translate(300px,240px)}}
+@keyframes float{to{transform:translate(-6vmax,5vmax) scale(1.1)}}
+.screen{position:fixed;inset:0;z-index:1;padding:calc(var(--st) + var(--ct) + 14px) calc(var(--sr) + 20px) calc(var(--sb) + 16px) calc(var(--sl) + 20px);display:flex;flex-direction:column}
+.hidden{display:none!important}
+/* liquid glass */
+.g{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04));backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(255,255,255,.06),inset 0 0 0 1px var(--edge),0 8px 24px rgba(0,0,0,.25);transition:transform .14s,background .2s,box-shadow .2s}
+.g:active{transform:scale(.96)}
+.g.pink{background:linear-gradient(180deg,rgba(255,140,196,.75),rgba(249,83,157,.55));box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 0 0 1px rgba(255,200,230,.45),0 10px 30px rgba(249,83,157,.35)}
+/* home */
+.hhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.title{font-size:22px;font-weight:500;letter-spacing:-.2px}
+.sub{font-size:14px;color:var(--mute);margin-top:6px}
+.cta{height:46px;padding:0 20px;border-radius:23px;font-size:15px;font-weight:500;white-space:nowrap;flex:none;color:#fff}
+.chaps{display:flex;gap:8px;overflow-x:auto;padding:14px 2px 12px;margin:0 -2px;scrollbar-width:none;flex:none}
+.chaps::-webkit-scrollbar{display:none}
+.chap{height:34px;padding:0 14px;border-radius:17px;font-size:13px;white-space:nowrap;flex:none;color:var(--mute)}
+.chap.on{color:#fff}
+.chap.lock{opacity:.4}
+.grid{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(124px,1fr));grid-auto-rows:96px;gap:10px;align-content:start;padding:2px 2px 8px}
+.lvl{border-radius:18px;padding:11px 11px 10px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0}
+.lvl.locked{background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);backdrop-filter:none;-webkit-backdrop-filter:none;color:var(--dim);cursor:default}
+.lvl.locked:active{transform:none}
+.lvl.cur{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1.5px var(--acc),0 0 24px rgba(249,83,157,.3)}
+.lvl .n{font-size:12px;color:var(--mute)}.lvl.cur .n{color:var(--acc2)}
+.lvl .w{font-size:10px;font-weight:500;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .4s}
+.lvl .s{display:block;font-size:11px;color:var(--mute);margin-top:5px}
+.lvl.passed .w::after{content:" ✓";color:var(--acc2)}
+/* game */
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px}
+.ghead .l{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500}
+.back{width:40px;height:40px;border-radius:20px;font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
+.pill{height:32px;padding:0 14px;border-radius:16px;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--mute)}
+.pill b{color:var(--ink);font-weight:600}
+.hintbar{margin-top:10px;min-height:0;font-size:14px;line-height:1.35;color:var(--ink);display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border-radius:14px}
+.hintbar svg{flex:none;margin-top:1px;color:var(--acc2)}
+.slots{flex:1;min-height:0;overflow:auto;padding-top:10px;display:grid;grid-template-columns:repeat(3,1fr);column-gap:16px;align-content:start}
+.row{display:flex;align-items:center;gap:3px;height:34px}
+.cell{width:21px;height:25px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:background .25s}
+.cell.on{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08));box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 0 0 1px rgba(255,255,255,.12)}
+.cell.hint{color:var(--acc2);box-shadow:inset 0 0 0 1px rgba(249,83,157,.6)}
+.row.target .cell{box-shadow:inset 0 0 0 1px rgba(249,83,157,.4)}
+.row.new .cell{animation:pop .4s ease both}
+.row.new .cell:nth-child(2){animation-delay:.03s}.row.new .cell:nth-child(3){animation-delay:.06s}.row.new .cell:nth-child(4){animation-delay:.09s}.row.new .cell:nth-child(5){animation-delay:.12s}.row.new .cell:nth-child(6){animation-delay:.15s}.row.new .cell:nth-child(n+7){animation-delay:.18s}
+@keyframes pop{0%{transform:scale(.5);opacity:.2}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.keys{display:grid;gap:6px;padding-top:10px}
+.key{height:58px;border-radius:16px;font-size:22px;font-weight:500}
+.key.used{opacity:.22;transform:scale(.94)}
+.bottom{display:grid;grid-template-columns:1fr minmax(0,auto) 1fr;align-items:center;gap:12px;padding-top:14px}
+.ib{height:50px;min-width:50px;padding:0 16px;border-radius:25px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:6px}
+.ib.sq{padding:0;width:50px}
+.word{position:relative;display:flex;justify-content:center;min-width:0}
+.wtxt{height:50px;display:flex;align-items:center;font-size:26px;font-weight:500;letter-spacing:4px;white-space:nowrap;text-shadow:0 0 22px rgba(249,83,157,.35)}
+.caret{width:2px;height:28px;background:var(--acc);margin-left:4px;border-radius:1px;box-shadow:0 0 10px var(--acc);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.msg{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);padding-bottom:4px;font-size:13px;white-space:nowrap;color:var(--mute)}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* done */
+.done{position:fixed;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:40px calc(var(--sr) + 32px) calc(var(--sb) + 32px) calc(var(--sl) + 32px);background:rgba(8,6,16,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.dcard{display:flex;align-items:center;gap:40px;padding:32px 36px;border-radius:28px;max-width:720px}
+.done .k{font-size:12px;color:var(--acc2);font-weight:600;letter-spacing:1.5px}
+.done h2{margin:10px 0 12px;font-size:26px;font-weight:500;letter-spacing:3px}
+.done p{margin:0;font-size:15px;color:var(--mute);line-height:1.5;max-width:340px}
+.dbtns{display:flex;flex-direction:column;gap:10px;width:230px;flex:none}
+.dbtns button{height:48px;border-radius:24px;font-size:15px}
+.p1{color:#fff;font-weight:500}.p3{color:var(--mute)}
+.loading{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mute)}
+@media (orientation:portrait){
+  .slots{grid-template-columns:repeat(2,1fr)}
+  .keys{gap:4px}.key{height:60px;font-size:clamp(15px,5.4vw,22px);border-radius:14px}
+  .dcard{flex-direction:column;align-items:stretch;gap:24px}.dbtns{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="space"><div class="neb"></div><div class="neb b"></div></div>
+<div class="loading" id="loading">Загружаю уровни…</div>
+
+<div id="home" class="screen hidden">
+  <div class="hhead"><div><div class="title U">Слова из слова</div><div class="sub" id="hsub"></div></div><button class="cta g pink" id="cont"></button></div>
+  <div class="chaps" id="chaps"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="game" class="screen hidden">
+  <div class="ghead">
+    <div class="l"><button class="back g" id="back" aria-label="К уровням">‹</button><span id="gtitle"></span></div>
+    <div class="pill g" id="gcnt"></div>
+  </div>
+  <div class="hintbar g hidden" id="hintbar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg><span id="hinttxt"></span></div>
+  <div class="slots U" id="slots"></div>
+  <div class="keys U" id="keys"></div>
+  <div class="bottom">
+    <button class="ib g" id="hint" style="justify-self:start" aria-label="Подсказка"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/></svg><span id="hn"></span></button>
+    <div class="word"><div class="wtxt U" id="wtxt"><span id="w"></span><span class="caret"></span></div><div class="msg" id="msg"></div></div>
+    <div style="justify-self:end;display:flex;gap:10px">
+      <button class="ib g sq" id="del" aria-label="Стереть букву"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12a1 1 0 001-1V6a1 1 0 00-1-1z"/><path d="M17 9l-5 6"/><path d="M12 9l5 6"/></svg></button>
+      <button class="ib g sq" id="clr" aria-label="Очистить"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M14.5 4.5l5 5-8.5 8.5H6.5l-2.5-2.5a1.5 1.5 0 010-2.1z"/><path d="M9.5 9.5l5 5"/><path d="M11 18h9"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<div id="done" class="done hidden">
+  <div class="dcard g">
+    <div><div class="k" id="dk"></div><h2 class="U" id="dw"></h2><p id="dp"></p></div>
+    <div class="dbtns"><button class="p1 g pink" id="dnext"></button><button class="g" id="dstay">Найти остальные</button><button class="p3" id="dhome">К списку уровней</button></div>
+  </div>
+</div>
+
+<script>
+const CH=25, HINT_START=30, HINT_BONUS=3;
+const tg=window.Telegram&&Telegram.WebApp;
+const $=id=>document.getElementById(id);
+let LEVELS=[],DEFS={};
+let S={p:{},hints:HINT_START,hint:{}};   // p[i]={f:[...найдено], ok:1 если пройден}; hint[i]={w,k}
+let lvl=0,cur=[],accT=0,msgT=0,chap=0;
+const plural=n=>n%10===1&&n%100!==11?'буква':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'буквы':'букв');
+const haptic=t=>{try{t==='ok'?tg.HapticFeedback.notificationOccurred('success'):t==='err'?tg.HapticFeedback.notificationOccurred('error'):tg.HapticFeedback.selectionChanged()}catch(e){}};
+
+/* ---------- хранение ----------
+   localStorage — полный снимок. Telegram CloudStorage — синхронизация между устройствами:
+   по ключу на уровень (лимит 4 КБ на значение) + ключ meta. */
+const LK='slova222_v1';
+const cloud=tg&&tg.CloudStorage&&tg.isVersionAtLeast&&tg.isVersionAtLeast('6.9')?tg.CloudStorage:null;
+const cget=keys=>new Promise(r=>cloud.getItems(keys,(e,v)=>r(e?{}:v||{})));
+const ckeys=()=>new Promise(r=>cloud.getKeys((e,v)=>r(e?[]:v||[])));
+async function load(){
+  try{const l=JSON.parse(localStorage.getItem(LK)||'null');if(l)S=Object.assign(S,l)}catch(e){}
+  if(!cloud)return;
+  try{
+    const keys=await ckeys();const all={};
+    for(let i=0;i<keys.length;i+=50)Object.assign(all,await cget(keys.slice(i,i+50)));
+    if(all.meta2){const m=JSON.parse(all.meta2);if((m.hints??null)!==null&&Object.keys(S.p).length===0)S.hints=m.hints}
+    for(const k in all){if(!/^v\d+$/.test(k))continue;const i=+k.slice(1),c=JSON.parse(all[k]),mine=S.p[i];
+      if(!mine||c.f.length>mine.f.length)S.p[i]=c}
+  }catch(e){}
+}
+let dirty=new Set(),saveT=0;
+function save(i){try{localStorage.setItem(LK,JSON.stringify(S))}catch(e){}
+  if(!cloud)return;if(i!==undefined)dirty.add(i);clearTimeout(saveT);
+  saveT=setTimeout(()=>{dirty.forEach(k=>cloud.setItem('v'+k,JSON.stringify(S.p[k]),()=>{}));dirty.clear();cloud.setItem('meta2',JSON.stringify({hints:S.hints}),()=>{})},500)}
+
+const lp=i=>S.p[i]||{f:[],ok:0};
+const unlocked=i=>i===0||!!lp(i-1).ok;
+const currentIdx=()=>{for(let i=0;i<LEVELS.length;i++)if(!lp(i).ok)return i;return LEVELS.length-1};
+const lensCache={};
+function lens(i){if(lensCache[i])return lensCache[i];const L=LEVELS[i],ws=L.w.slice().sort((a,b)=>a.length-b.length);
+  return lensCache[i]=Array.from({length:L.n},(_,k)=>ws[Math.floor((k+.5)*ws.length/L.n)].length).sort((a,b)=>a-b)}
+
+function show(id){['home','game','done'].forEach(s=>$(s).classList.toggle('hidden',s!==id&&!(id==='done'&&s==='game')));
+  if(tg){id==='home'?tg.BackButton.hide():tg.BackButton.show()}}
+
+/* ---------- главный экран ---------- */
+function renderHome(){
+  const passed=LEVELS.filter((_,i)=>lp(i).ok).length,ci=currentIdx(),nCh=Math.ceil(LEVELS.length/CH);
+  $('hsub').textContent='Пройдено '+passed+' из '+LEVELS.length+' · подсказок '+S.hints;
+  $('cont').textContent='Продолжить · '+(ci+1);
+  $('chaps').innerHTML=Array.from({length:nCh},(_,c)=>{const a=c*CH,b=Math.min(LEVELS.length,a+CH),open=unlocked(a),done=lp(b-1).ok;
+    return '<button class="chap g'+(c===chap?' on pink':'')+(open?'':' lock')+'" data-c="'+c+'">'+(done?'✓ ':'')+(a+1)+'–'+b+'</button>'}).join('');
+  const a=chap*CH;
+  $('grid').innerHTML=LEVELS.slice(a,a+CH).map((L,k)=>{const i=a+k,p=lp(i),open=unlocked(i),isCur=i===ci&&!p.ok,n=Math.min(p.f.length,L.n);
+    const sub=p.ok?p.f.length+' из '+L.w.length:open?n+' / '+L.n:'';
+    return '<button class="lvl g'+(open?'':' locked')+(isCur?' cur':'')+(p.ok?' passed':'')+'" data-i="'+i+'"><span class="n U">'+(i+1)+'</span><span class="w U">'+L.b+'</span><span><span class="bar"><i style="width:'+(open?n/L.n*100:0)+'%"></i></span><span class="s">'+sub+'</span></span></button>'}).join('');
+  show('home');
+  const on=$('chaps').querySelector('.on');if(on)$('chaps').scrollLeft=on.offsetLeft-60;
+}
+
+/* ---------- игра ---------- */
+function open(i){if(!unlocked(i))return;lvl=i;cur=[];chap=Math.floor(i/CH);renderGame();show('game')}
+function layout(){
+  const L=lens(lvl),found=lp(lvl).f,filled=L.map(()=>null),extra=[];
+  for(const w of found){const k=L.findIndex((n,j)=>n===w.length&&!filled[j]);k>=0?filled[k]=w:extra.push(w)}
+  return {L,filled,extra};
+}
+function renderGame(newW){
+  const Lv=LEVELS[lvl],p=lp(lvl),{L,filled,extra}=layout(),h=S.hint[lvl];
+  let hk=-1;if(h){hk=L.findIndex((n,j)=>n===h.w.length&&!filled[j])}
+  $('gtitle').textContent='Уровень '+(lvl+1);
+  $('gcnt').innerHTML='<b>'+p.f.length+'</b> из '+Lv.n;
+  const rows=[...L.map((n,j)=>({n,w:filled[j],t:j===hk})),...extra.map(w=>({n:w.length,w}))];
+  $('slots').innerHTML=rows.map(r=>'<div class="row'+(r.w&&r.w===newW?' new':'')+(r.t?' target':'')+'">'+Array.from({length:r.n},(_,j)=>{
+    if(r.w)return '<div class="cell on">'+r.w[j]+'</div>';
+    if(r.t&&j<h.k)return '<div class="cell hint">'+h.w[j]+'</div>';
+    return '<div class="cell"></div>'}).join('')+'</div>').join('');
+  $('keys').style.gridTemplateColumns='repeat('+Lv.b.length+',1fr)';
+  $('keys').innerHTML=Lv.b.split('').map((c,i)=>'<button class="key g'+(cur.includes(i)?' used':'')+'" data-k="'+i+'">'+c+'</button>').join('');
+  $('w').textContent=word();
+  $('hn').textContent=S.hints;
+  if(h){$('hintbar').classList.remove('hidden');$('hinttxt').textContent=(DEFS[h.w]||'Слово из '+h.w.length+' '+plural(h.w.length))+(h.k?' · начинается на «'+h.w.slice(0,h.k)+'»':'')}
+  else $('hintbar').classList.add('hidden');
+}
+function flash(t,type,ms){const m=$('msg');m.textContent=t;m.className='msg '+(type||'');clearTimeout(msgT);msgT=setTimeout(()=>m.textContent='',ms||1800)}
+const word=()=>cur.map(i=>LEVELS[lvl].b[i]).join('');
+function tap(i){
+  haptic();
+  cur=cur.includes(i)?cur.filter(x=>x!==i):[...cur,i];
+  renderGame();clearTimeout(accT);
+  const w=word(),L=LEVELS[lvl],found=lp(lvl).f;
+  if(w.length>=3&&L.w.includes(w)&&!found.includes(w)){
+    const longer=L.w.some(x=>x.length>w.length&&x.startsWith(w)&&!found.includes(x));
+    accT=setTimeout(()=>{if(word()===w)accept(w)},longer?1100:180);
+  }else if(cur.length===L.b.length){const e=$('wtxt');e.classList.remove('shake');void e.offsetWidth;e.classList.add('shake');haptic('err')}
+}
+function accept(w){
+  const p=lp(lvl),L=LEVELS[lvl];if(p.f.includes(w))return;
+  const f=[...p.f,w],reach=!p.ok&&f.length>=L.n;
+  S.p[lvl]={f,ok:p.ok||reach?1:0};
+  if(S.hint[lvl]&&S.hint[lvl].w===w)delete S.hint[lvl];
+  if(reach)S.hints+=HINT_BONUS;
+  save(lvl);cur=[];renderGame(w);haptic('ok');
+  flash(f.length===L.w.length?'Найдены все слова':'+1 слово','ok');
+  if(reach)setTimeout(showDone,550);
+}
+/* подсказка: 1-е нажатие — смысл слова, следующие — открывают по букве */
+function hint(){
+  if(S.hints<=0)return flash('Подсказки закончились','err');
+  const L=LEVELS[lvl],found=lp(lvl).f;let h=S.hint[lvl];
+  if(h&&found.includes(h.w))h=null;
+  if(!h){
+    const {L:lns,filled}=layout(),empty=lns.filter((_,j)=>!filled[j]);
+    let rest=L.w.filter(w=>!found.includes(w));const fit=rest.filter(w=>empty.includes(w.length));if(fit.length)rest=fit;
+    if(!rest.length)return;
+    const wd=rest.filter(w=>DEFS[w]);const pool=wd.length?wd:rest;
+    const w=pool[Math.floor(Math.random()*pool.length)];h={w,k:DEFS[w]?0:1};
+  }else{
+    if(h.k>=h.w.length-1)return flash('Осталась последняя буква — попробуйте сами','');
+    h={w:h.w,k:h.k+1};
+  }
+  S.hint[lvl]=h;S.hints--;save(lvl);renderGame();haptic();
+}
+function showDone(){
+  const L=LEVELS[lvl],p=lp(lvl),last=lvl===LEVELS.length-1;
+  $('dk').textContent='УРОВЕНЬ '+(lvl+1)+' ПРОЙДЕН';$('dw').textContent=L.b;
+  $('dp').textContent='Найдено '+p.f.length+' из '+L.w.length+'. +'+HINT_BONUS+' подсказки в запас. Можно остаться и поискать остальные слова.';
+  $('dnext').textContent=last?'К списку уровней':'Уровень '+(lvl+2);
+  show('done');
+}
+
+$('grid').addEventListener('click',e=>{const b=e.target.closest('.lvl');if(b)open(+b.dataset.i)});
+$('chaps').addEventListener('click',e=>{const b=e.target.closest('.chap');if(b){chap=+b.dataset.c;renderHome()}});
+$('keys').addEventListener('click',e=>{const b=e.target.closest('.key');if(b)tap(+b.dataset.k)});
+$('cont').onclick=()=>open(currentIdx());
+$('back').onclick=$('dhome').onclick=renderHome;
+$('hint').onclick=hint;
+$('del').onclick=()=>{cur=cur.slice(0,-1);renderGame()};
+$('clr').onclick=()=>{cur=[];renderGame()};
+$('dstay').onclick=()=>show('game');
+$('dnext').onclick=()=>lvl===LEVELS.length-1?renderHome():open(lvl+1);
+
+if(tg){
+  tg.ready();tg.expand();
+  try{tg.setHeaderColor('#0b0a14');tg.setBackgroundColor('#0b0a14');tg.setBottomBarColor&&tg.setBottomBarColor('#0b0a14')}catch(e){}
+  try{tg.disableVerticalSwipes&&tg.disableVerticalSwipes()}catch(e){}
+  try{if(tg.isVersionAtLeast('8.0')&&['android','ios'].includes(tg.platform)){tg.requestFullscreen();tg.unlockOrientation&&tg.unlockOrientation()}}catch(e){}
+  tg.BackButton.onClick(renderHome);
+}
+Promise.all([fetch('levels.json').then(r=>r.json()),fetch('defs.json').then(r=>r.json()).catch(()=>({})),load()]).then(([l,d])=>{
+  LEVELS=l;DEFS=d;chap=Math.floor(currentIdx()/CH);$('loading').remove();renderHome();
+}).catch(()=>{$('loading').textContent='Не удалось загрузить уровни'});
+</script>
+</body>
+</html>
